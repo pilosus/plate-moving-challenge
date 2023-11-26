@@ -1,0 +1,25 @@
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+
+[tool.isort]
+atomic = true
+line_length = 88
+skip_gitignore = true
+known_first_party = ["plate"]
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "silent"
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+check_untyped_defs = true
+
+[tool.black]
+target-version = ["py311"]
+line-length = 88
