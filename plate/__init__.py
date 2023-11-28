@@ -80,6 +80,16 @@ class Mover:
         rows = len(plate)
         return cols, rows, cols * rows
 
+    def validate_deterministic(self) -> None:
+        """
+        Raise exception if destination plate won't fit all the samples.
+        Used for `move_deterministic` approach.
+        """
+        _, _, max_capacity = self._get_plate_size(self.dest)
+        for row in self.source:
+            for val in row:
+                self._check_capacity(val, max_capacity)
+
     def move_deterministic(self):
         """
         Move samples from the source plate to destination plate column by column.
@@ -125,11 +135,24 @@ class Mover:
         else:
             return new_col, new_row
 
+    def validate_sparse(self) -> None:
+        """
+        Raise exception if destination plate won't fit all the samples.
+        Used for `move_sparse` approach.
+        """
+        _, _, dest_max_capacity = self._get_plate_size(self.dest)
+        uniq_vals = set()
+        for row in self.source:
+            for val in row:
+                uniq_vals.add(val)
+        if len(uniq_vals) > dest_max_capacity:
+            raise ValueError("Plate capacity exceeded")
+
     def move_sparse(self):
         """
         Move source plate's samples to the destination plate column by column.
         Same group samples are grouped.
-        Pros: destination plate is filled sparsefully, no matter the sample numbering.
+        Pros: destination plate is filled sparsely, no matter the sample numbering.
         Cons: we cannot predict destination cells by sample group number
         without prior knowledge of the source plate
         """
