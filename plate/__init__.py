@@ -42,6 +42,14 @@ class Mover:
     def __init__(
         self, source: PlateType, dest: PlateType, overfill: bool = False
     ) -> None:
+        """
+        Initialise Plate mover
+
+        :param source: source plate with samples
+        :param dest:  destination plate to move samples to
+        :param overfill: flag showing if samples of a different group can be mixed
+                         in case capacities of the destination plate are exceeded.
+        """
         self.source = source
         self.dest = dest
         self.original_dest = copy.deepcopy(dest)
@@ -67,8 +75,14 @@ class Mover:
             )
 
     @staticmethod
-    def _calc_deterministic_coord(value: int, max_capacity: int, rows: int):
-        return divmod((value - 1) % max_capacity, rows)
+    def _calc_deterministic_coord(
+        value: int, max_capacity: int, rows: int
+    ) -> CoordType:
+        """
+        Return col, row indices representing coordinates to put the sample value
+        """
+        col, row = divmod((value - 1) % max_capacity, rows)
+        return col, row
 
     @staticmethod
     def _get_plate_size(plate: PlateType) -> tuple[int, int, int]:
@@ -106,22 +120,20 @@ class Mover:
             for row_idx in range(source_rows):
                 sample_value = self.source[row_idx][col_idx]
                 self._check_capacity(val=sample_value, max_capacity=dest_max_capacity)
-                # Swap col/row indices so that we move samples column by column
-                dest_row_idx, dest_col_idx = self._calc_deterministic_coord(
+                dest_col_idx, dest_row_idx = self._calc_deterministic_coord(
                     value=sample_value, max_capacity=dest_max_capacity, rows=dest_rows
                 )
-
                 self.sample_counters[sample_value] += 1
-                self.dest[dest_col_idx][dest_row_idx] = sample_value
+                self.dest[dest_row_idx][dest_col_idx] = sample_value
 
     def _get_sparse_coord(
         self,
         prev_coord: CoordType | None,
         plate_cols: int,
         plate_rows: int,
-    ) -> tuple[int, int]:
+    ) -> CoordType:
         """
-        Given the previous coordinates and the plate size, return next unfilled coordinates
+        Given the previous coordinates and the plate size, return next unfilled coordinates (col, row)
         """
         if not prev_coord:
             return 0, 0
