@@ -1,4 +1,5 @@
 import copy
+import math
 from collections import defaultdict
 
 SRC = [
@@ -40,7 +41,11 @@ class Mover:
     alpha = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
     def __init__(
-        self, source: PlateType, dest: PlateType, overfill: bool = False
+        self,
+        source: PlateType,
+        dest: PlateType,
+        overfill: bool = False,
+        groupby: int = 1,
     ) -> None:
         """
         Initialise Plate mover
@@ -49,11 +54,15 @@ class Mover:
         :param dest:  destination plate to move samples to
         :param overfill: flag showing if samples of a different group can be mixed
                          in case capacities of the destination plate are exceeded.
+        :param groupby: number of samples that form a single group number/colour
         """
         self.source = source
-        self.dest = dest
+        self.dest = copy.deepcopy(dest)
         self.original_dest = copy.deepcopy(dest)
         self.overfill = overfill
+        self.groupby = groupby
+        self.step = int(math.sqrt(groupby))
+        assert self.step**2 == self.groupby
         self.sample_counters: dict[int, int] = defaultdict(int)
 
     def reset(self):
@@ -116,14 +125,14 @@ class Mover:
         source_cols, source_rows, _ = self._get_plate_size(self.source)
         dest_cols, dest_rows, dest_max_capacity = self._get_plate_size(self.dest)
 
-        for col_idx in range(source_cols):
-            for row_idx in range(source_rows):
+        for col_idx in range(0, source_cols, self.step):
+            for row_idx in range(0, source_rows, self.step):
                 sample_value = self.source[row_idx][col_idx]
                 self._check_capacity(val=sample_value, max_capacity=dest_max_capacity)
                 dest_col_idx, dest_row_idx = self._calc_deterministic_coord(
                     value=sample_value, max_capacity=dest_max_capacity, rows=dest_rows
                 )
-                self.sample_counters[sample_value] += 1
+                self.sample_counters[sample_value] += self.groupby
                 self.dest[dest_row_idx][dest_col_idx] = sample_value
 
     def _get_sparse_coord(
@@ -174,8 +183,8 @@ class Mover:
         prev_coord = None
         val_to_coord: dict[int, CoordType] = {}
 
-        for col_idx in range(source_cols):
-            for row_idx in range(source_rows):
+        for col_idx in range(0, source_cols, self.step):
+            for row_idx in range(0, source_rows, self.step):
                 sample_value = self.source[row_idx][col_idx]
                 existing_coords = val_to_coord.get(sample_value)
 
@@ -189,7 +198,7 @@ class Mover:
                     prev_coord = dest_col_idx, dest_row_idx
                     self.dest[dest_row_idx][dest_col_idx] = sample_value
 
-                self.sample_counters[sample_value] += 1
+                self.sample_counters[sample_value] += self.groupby
 
     def __repr__(self):
         """

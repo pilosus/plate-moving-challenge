@@ -10,6 +10,7 @@ class MoveParam:
     source: list[list[int]]
     dest: list[list[int]]
     overfill: bool
+    groupby: int
     move_type: str
     expected: list[list[int]]
 
@@ -22,6 +23,7 @@ class MoveParam:
                 source=[[1, 2, 3], [1, 2, 3], [3, 3, 3]],
                 dest=[[0, 0], [0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="deterministic",
                 expected=[[1, 0], [2, 0], [3, 0]],
             ),
@@ -32,6 +34,7 @@ class MoveParam:
                 source=[[4, 2, 3], [1, 2, 3], [3, 3, 3]],
                 dest=[[0, 0], [0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="deterministic",
                 expected=[[1, 4], [2, 0], [3, 0]],
             ),
@@ -42,6 +45,7 @@ class MoveParam:
                 source=[[4, 4, 3], [1, 1, 3], [3, 3, 3]],
                 dest=[[0, 0], [0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="deterministic",
                 expected=[[1, 4], [0, 0], [3, 0]],
             ),
@@ -52,6 +56,7 @@ class MoveParam:
                 source=[[1, 2, 3], [1, 2, 3], [4, 5, 6]],
                 dest=[[0, 0], [0, 0]],
                 overfill=True,
+                groupby=1,
                 move_type="deterministic",
                 expected=[[5, 3], [6, 4]],
             ),
@@ -62,6 +67,7 @@ class MoveParam:
                 source=[[1, 2, 3], [1, 2, 3], [3, 3, 3]],
                 dest=[[0, 0], [0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="sparse",
                 expected=[[1, 0], [3, 0], [2, 0]],
             ),
@@ -72,6 +78,7 @@ class MoveParam:
                 source=[[4, 4, 3], [1, 1, 3], [3, 3, 3]],
                 dest=[[0, 0], [0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="sparse",
                 expected=[[4, 0], [1, 0], [3, 0]],
             ),
@@ -82,10 +89,65 @@ class MoveParam:
                 source=[[4, 4, 5], [1, 1, 6], [3, 3, 6], [3, 3, 7], [3, 3, 8]],
                 dest=[[0, 0], [0, 0]],
                 overfill=True,
+                groupby=1,
                 move_type="sparse",
                 expected=[[6, 8], [7, 5]],
             ),
             id="sparse_unordered_noncontinuous_overfill",
+        ),
+        pytest.param(
+            MoveParam(
+                source=[[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 4, 4], [3, 3, 4, 4]],
+                dest=[[0, 0], [0, 0]],
+                overfill=False,
+                groupby=4,
+                move_type="sparse",
+                expected=[[1, 2], [3, 4]],
+            ),
+            id="sparse_groupby_no_overfill",
+        ),
+        pytest.param(
+            MoveParam(
+                source=[
+                    [1, 1, 2, 2, 5, 5],
+                    [1, 1, 2, 2, 5, 5],
+                    [3, 3, 4, 4, 6, 6],
+                    [3, 3, 4, 4, 6, 6],
+                ],
+                dest=[[0, 0], [0, 0]],
+                overfill=True,
+                groupby=4,
+                move_type="sparse",
+                expected=[[5, 2], [6, 4]],
+            ),
+            id="sparse_groupby_overfill",
+        ),
+        pytest.param(
+            MoveParam(
+                source=[[1, 1, 2, 2], [1, 1, 2, 2], [3, 3, 4, 4], [3, 3, 4, 4]],
+                dest=[[0, 0], [0, 0]],
+                overfill=False,
+                groupby=4,
+                move_type="deterministic",
+                expected=[[1, 3], [2, 4]],
+            ),
+            id="deterministic_groupby_no_overfill",
+        ),
+        pytest.param(
+            MoveParam(
+                source=[
+                    [1, 1, 2, 2, 5, 5],
+                    [1, 1, 2, 2, 5, 5],
+                    [3, 3, 4, 4, 6, 6],
+                    [3, 3, 4, 4, 6, 6],
+                ],
+                dest=[[0, 0], [0, 0]],
+                overfill=True,
+                groupby=4,
+                move_type="deterministic",
+                expected=[[5, 3], [6, 4]],
+            ),
+            id="deterministic_groupby_overfill",
         ),
     ],
 )
@@ -115,6 +177,7 @@ def test_move_reset():
                 source=[[1, 2, 3], [1, 2, 3], [4, 5, 6]],
                 dest=[[0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="deterministic",
                 expected=[[5, 3], [6, 4]],
             ),
@@ -126,6 +189,7 @@ def test_move_reset():
                 source=[[4, 4, 5], [1, 1, 6], [3, 3, 6], [3, 3, 7], [3, 3, 8]],
                 dest=[[0, 0], [0, 0]],
                 overfill=False,
+                groupby=1,
                 move_type="sparse",
                 expected=[[6, 8], [7, 5]],
             ),
